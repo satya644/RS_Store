@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RS Store — Handcrafted Jewellery</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" type="image/png" href="images/favicon.png">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="brand"><img src="images/logo.png" alt="RS Store logo" class="brand-logo"><span class="brand-text">RS <span>Store</span></span></a>
+    <form class="header-search" onsubmit="return goSearch(event, 'pages/products.html')">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="header-search-input" placeholder="Search jewellery…">
+    </form>
+    <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="pages/cart.html" class="cart-link"><i class="fa-solid fa-cart-shopping"></i> <span class="cart-badge">0</span></a>
+      <span id="profile-icon-slot" data-prefix="pages/"></span>
+    </nav>
+  </div>
+</header>
+
+<section class="hero-slider" id="hero-slider">
+  <div class="hero-slides" id="hero-slides"></div>
+  <button class="hero-arrow left" onclick="changeSlide(-1)" aria-label="Previous"><i class="fa-solid fa-chevron-left"></i></button>
+  <button class="hero-arrow right" onclick="changeSlide(1)" aria-label="Next"><i class="fa-solid fa-chevron-right"></i></button>
+  <div class="hero-dots" id="hero-dots"></div>
+</section>
+
+<div class="container">
+  <div class="category-slider">
+    <button class="cat-arrow left" onclick="scrollCategories(-1)" aria-label="Scroll left"><i class="fa-solid fa-chevron-left"></i></button>
+    <div class="category-row" id="category-row"></div>
+    <button class="cat-arrow right" onclick="scrollCategories(1)" aria-label="Scroll right"><i class="fa-solid fa-chevron-right"></i></button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="section-title">
+    <h2>Featured pieces</h2>
+    <a href="pages/products.html">See full collection</a>
+  </div>
+</div>
+
+<div class="product-grid" id="featured-grid">
+  <p class="empty-state" style="grid-column: 1/-1;">Loading pieces…</p>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <a href="index.html" class="brand"><img src="images/logo.png" alt="RS Store logo" class="brand-logo"><span class="brand-text">RS <span>Store</span></span></a>
+      <p>Small-batch jewellery, made with care and worn with pride. Based in India, shipped everywhere.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Shop</h4>
+      <a href="pages/products.html">Full collection</a>
+      <a href="pages/cart.html">Your cart</a>
+    </div>
+    <div class="footer-col">
+      <h4>Reach us</h4>
+      <p>sm9268459@gmail.com</p>
+      <a href="tel:+916386325046">+91 63863 25046</a>
+      <p>Open 24/7</p>
+    </div>
+  </div>
+  <p class="footer-bottom">© 2026 RS Store. All pieces made with love. Founder: Satyam Maurya</p>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/customerAuth.js"></script>
+<script src="js/authGuard.js"></script>
+<script src="js/searchSuggest.js"></script>
+<script src="js/whatsapp.js"></script>
+<script>
+  function starsHtml(rating) {
+    const full = Math.round(rating);
+    let html = '<span class="stars">';
+    for (let i = 1; i <= 5; i++) html += i <= full ? '★' : '<span class="empty">★</span>';
+    html += '</span>';
+    return html;
+  }
+
+  async function loadFeatured() {
+    const grid = document.getElementById('featured-grid');
+    try {
+      const res = await api.getProducts('?limit=4');
+      if (!res.data || res.data.length === 0) {
+        grid.innerHTML = '<p class="empty-state" style="grid-column: 1/-1;">New pieces are on their way — check back soon.</p>';
+        return;
+      }
+      grid.innerHTML = res.data.map(renderCard).join('');
+    } catch (e) {
+      grid.innerHTML = '<p class="empty-state" style="grid-column: 1/-1;">Could not load the collection right now.</p>';
+    }
+  }
+
+  function renderCard(p) {
+    const img = p.images?.[0]?.url || 'https://via.placeholder.com/400x400/f5ead9/6b1233?text=RS+Store';
+    const hasDiscount = p.discountPrice > 0;
+    return `
+      <a class="product-card" href="pages/product.html?id=${p._id}">
+        <div class="product-image"><img src="${img}" alt="${p.name}" loading="lazy"></div>
+        <p class="product-material">${p.material || ''}</p>
+        <h3 class="product-name">${p.name}</h3>
+        ${p.numReviews > 0 ? `${starsHtml(p.averageRating)}<span class="rating-count">(${p.numReviews})</span>` : ''}
+        <p class="product-price">
+          ${hasDiscount ? `<span class="price-strike">₹${p.price}</span>` : ''}
+          ₹${hasDiscount ? p.discountPrice : p.price}
+        </p>
+      </a>`;
+  }
+
+  let slides = [];
+  let currentSlide = 0;
+  let autoplayTimer;
+
+  function renderSlides() {
+    document.getElementById('hero-slides').innerHTML = slides.map((s, i) => `
+      <div class="hero-slide ${i === 0 ? 'active' : ''}">
+        ${s.image ? `<img src="${s.image}" alt="">` : '<div class="hero-fallback"></div>'}
+        <div class="hero-overlay"></div>
+        <div class="hero-slide-content">
+          <h1>${s.heading || ''}</h1>
+          <p>${s.subtext || ''}</p>
+          <a href="pages/products.html" class="btn">${s.buttonText || 'Shop now'} →</a>
+        </div>
+      </div>`).join('');
+    document.getElementById('hero-slider').classList.toggle('single', slides.length <= 1);
+    renderDots();
+  }
+
+  function renderDots() {
+    document.getElementById('hero-dots').innerHTML = slides.map((_, i) =>
+      `<span class="hero-dot ${i === currentSlide ? 'active' : ''}" onclick="goToSlide(${i})"></span>`).join('');
+  }
+
+  function showSlide(i) {
+    document.querySelectorAll('.hero-slide').forEach((el, idx) => el.classList.toggle('active', idx === i));
+    document.querySelectorAll('.hero-dot').forEach((el, idx) => el.classList.toggle('active', idx === i));
+    currentSlide = i;
+  }
+
+  function changeSlide(dir) {
+    if (slides.length <= 1) return;
+    showSlide((currentSlide + dir + slides.length) % slides.length);
+    resetAutoplay();
+  }
+
+  function goToSlide(i) { showSlide(i); resetAutoplay(); }
+
+  function startAutoplay() {
+    if (slides.length <= 1) return;
+    autoplayTimer = setInterval(() => showSlide((currentSlide + 1) % slides.length), 5000);
+  }
+
+  function resetAutoplay() { clearInterval(autoplayTimer); startAutoplay(); }
+
+  async function loadSettings() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/settings`);
+      const json = await res.json();
+      const s = json.data;
+      if (!s) return;
+
+      slides = (s.heroSlides && s.heroSlides.length) ? s.heroSlides : [
+        { image: '', heading: 'Timeless Jewellery For Every You', subtext: 'Elegant designs. Premium quality. Made for every moment that matters.', buttonText: 'Shop now' },
+      ];
+      renderSlides();
+      startAutoplay();
+
+      const catRow = document.getElementById('category-row');
+      if (s.categories && s.categories.length) {
+        catRow.innerHTML = s.categories.map(c => `
+          <a class="category-item" href="pages/products.html?category=${encodeURIComponent(c.name)}">
+            <div class="category-circle">${c.image ? `<img src="${c.image}" alt="${c.name}">` : ''}</div>
+            <span>${c.name}</span>
+          </a>`).join('');
+      }
+    } catch (e) { /* keep silent */ }
+  }
+
+  function scrollCategories(dir) {
+    document.getElementById('category-row').scrollBy({ left: dir * 160, behavior: 'smooth' });
+  }
+
+  function goSearch(e, targetUrl) {
+    e.preventDefault();
+    const q = document.getElementById('header-search-input').value.trim();
+    window.location.href = targetUrl + (q ? '?search=' + encodeURIComponent(q) : '');
+    return false;
+  }
+
+  loadSettings();
+  loadFeatured();
+</script>
+</body>
+</html>

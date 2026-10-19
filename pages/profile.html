@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Account — RS Store</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="icon" type="image/png" href="../images/favicon.png">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="RS Store logo" class="brand-logo"><span class="brand-text">RS <span>Store</span></span></a>
+    <form class="header-search" onsubmit="return goSearch(event, 'products.html')">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="header-search-input" placeholder="Search jewellery…">
+    </form>
+    <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="cart.html" class="cart-link"><i class="fa-solid fa-cart-shopping"></i> <span class="cart-badge">0</span></a>
+      <span id="profile-icon-slot" data-prefix=""></span>
+    </nav>
+  </div>
+</header>
+
+<div class="back-bar"><button class="back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i> Back</button></div>
+
+<div class="page-wrap" style="max-width:480px;">
+  <h1 style="font-size:32px;">My account</h1>
+
+  <div class="stamp-card" id="stamp-card">
+    <h3>Loyalty stamp card</h3>
+    <p class="stamp-note">Collect 1 stamp for every order that's delivered. Fill all 7 to unlock a reward!</p>
+    <div class="stamp-row" id="stamp-row"></div>
+    <p class="stamp-reward-msg" id="stamp-reward-msg" style="display:none;"></p>
+  </div>
+
+  <form id="profile-form" style="display:grid; gap:18px; margin-top:28px;">
+    <div>
+      <label>Full name</label>
+      <input type="text" name="name" required>
+    </div>
+    <div>
+      <label>Mobile number</label>
+      <input type="tel" name="phone" disabled style="opacity:0.6;">
+    </div>
+    <div>
+      <label>Email</label>
+      <input type="email" name="email">
+    </div>
+    <div>
+      <label>Address</label>
+      <input type="text" name="line1" placeholder="House no., street, area" style="margin-bottom:10px;">
+      <div class="form-row">
+        <input type="text" name="city" placeholder="City">
+        <input type="text" name="state" placeholder="State">
+      </div>
+      <input type="text" name="pincode" placeholder="Pincode" style="margin-top:10px;">
+    </div>
+    <button type="submit" class="btn">Save changes</button>
+    <p class="msg" id="profile-msg" style="font-size:13px;"></p>
+  </form>
+  <p style="margin-top:24px; font-size:14px; cursor:pointer; color:var(--gold-600); border-bottom:1px solid var(--gold-500); display:inline-block;" onclick="customerAuth.logout()">Log out</p>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <a href="../index.html" class="brand"><img src="../images/logo.png" alt="RS Store logo" class="brand-logo"><span class="brand-text">RS <span>Store</span></span></a>
+      <p>Small-batch jewellery, made with care and worn with pride.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Shop</h4>
+      <a href="products.html">Full collection</a>
+      <a href="cart.html">Your cart</a>
+    </div>
+    <div class="footer-col">
+      <h4>Reach us</h4>
+      <p>sm9268459@gmail.com</p>
+      <a href="tel:+916386325046">+91 63863 25046</a>
+    </div>
+  </div>
+  <p class="footer-bottom">© 2026 RS Store. All pieces made with love. Founder: Satyam Maurya</p>
+</footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/cart.js"></script>
+<script src="../js/customerAuth.js"></script>
+<script src="../js/authGuard.js"></script>
+<script src="../js/searchSuggest.js"></script>
+<script src="../js/whatsapp.js"></script>
+<script>
+  function goSearch(e, targetUrl) {
+    e.preventDefault();
+    const q = document.getElementById('header-search-input').value.trim();
+    window.location.href = targetUrl + (q ? '?search=' + encodeURIComponent(q) : '');
+    return false;
+  }
+
+  if (!customerAuth.isLoggedIn()) window.location.href = 'login.html';
+
+  function renderStamps(stamps, rewardsAvailable) {
+    const row = document.getElementById('stamp-row');
+    let html = '';
+    for (let i = 1; i <= 7; i++) {
+      html += `<div class="stamp-circle ${i <= stamps ? 'filled' : ''}">${i <= stamps ? '<i class="fa-solid fa-gem"></i>' : i}</div>`;
+    }
+    row.innerHTML = html;
+
+    const rewardMsg = document.getElementById('stamp-reward-msg');
+    if (rewardsAvailable > 0) {
+      rewardMsg.style.display = 'block';
+      rewardMsg.innerHTML = `🎉 You have <strong>${rewardsAvailable}</strong> reward${rewardsAvailable > 1 ? 's' : ''} available! Mention this at checkout or message us on WhatsApp to redeem.`;
+    } else {
+      rewardMsg.style.display = 'none';
+    }
+  }
+
+  async function loadProfile() {
+    try {
+      const res = await customerApi.getProfile();
+      if (!res.success) throw new Error(res.message);
+      const c = res.data;
+      customerAuth.setCustomer(c);
+
+      const form = document.getElementById('profile-form');
+      form.name.value = c.name || '';
+      form.phone.value = c.phone || '';
+      form.email.value = c.email || '';
+      form.line1.value = c.address?.line1 || '';
+      form.city.value = c.address?.city || '';
+      form.state.value = c.address?.state || '';
+      form.pincode.value = c.address?.pincode || '';
+
+      renderStamps(c.stamps || 0, c.rewardsAvailable || 0);
+    } catch (e) {
+      document.getElementById('profile-msg').textContent = 'Could not load your profile.';
+    }
+  }
+
+  document.getElementById('profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const msg = document.getElementById('profile-msg');
+    try {
+      const res = await customerApi.updateProfile({
+        name: form.name.value,
+        email: form.email.value,
+        address: { line1: form.line1.value, city: form.city.value, state: form.state.value, pincode: form.pincode.value },
+      });
+      if (!res.success) throw new Error(res.message);
+      customerAuth.setCustomer(res.data);
+      msg.textContent = 'Saved ✓';
+      msg.className = 'msg success';
+    } catch (err) {
+      msg.textContent = err.message || 'Could not save changes';
+      msg.className = 'msg error';
+    }
+  });
+
+  loadProfile();
+</script>
+</body>
+</html>

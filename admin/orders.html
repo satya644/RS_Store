@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1f030d">
+<meta name="robots" content="noindex, nofollow">
+<title>Orders — RS Store Admin</title>
+<link rel="stylesheet" href="css/admin.css">
+<link rel="icon" type="image/png" href="../images/favicon.png">
+</head>
+<body>
+
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a href="dashboard.html" class="brand"><img src="../images/logo.png" alt="RS Store logo" class="brand-logo"><span class="brand-text">RS <span>Store</span></span></a>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="products.html">Products</a>
+      <a href="orders.html" class="active">Orders</a>
+      <a href="customers.html">Customers</a>
+      <a href="settings.html">Site Settings</a>
+      <a href="account.html">Account</a>
+    </nav>
+    <p class="logout" onclick="auth.logout()">Log out</p>
+  </aside>
+
+  <main class="main">
+    <div class="page-header"><h1>Orders</h1></div>
+    <p style="font-size:13px; color:var(--ink-700); margin-bottom:20px;">Marking an order "Delivered" for the first time automatically awards the customer 1 loyalty stamp.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody id="orders-body"><tr><td colspan="6" class="empty-row">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="js/adminApi.js"></script>
+<script>
+  auth.requireAuth();
+
+  const statuses = ['Placed', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
+
+  async function loadOrders() {
+    const tbody = document.getElementById('orders-body');
+    try {
+      const res = await adminApi.getOrders('?limit=200');
+      const orders = res.data || [];
+      tbody.innerHTML = orders.length
+        ? orders.map(o => `
+            <tr>
+              <td data-label="Customer">${o.customerName}<br><span style="font-size:12px; opacity:0.6;">${o.address?.city || ''}</span></td>
+              <td data-label="Phone">${o.phone}</td>
+              <td data-label="Items">${o.items.map(i => `${i.name} ×${i.quantity}`).join(', ')}</td>
+              <td data-label="Total">₹${o.totalAmount}</td>
+              <td data-label="Status">
+                <select onchange="updateStatus('${o._id}', this.value)">
+                  ${statuses.map(s => `<option value="${s}" ${s === o.orderStatus ? 'selected' : ''}>${s}</option>`).join('')}
+                </select>
+              </td>
+              <td data-label="Date">${new Date(o.createdAt).toLocaleDateString()}</td>
+            </tr>`).join('')
+        : '<tr><td colspan="6" class="empty-row">No orders yet.</td></tr>';
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-row">Could not load orders.</td></tr>';
+    }
+  }
+
+  async function updateStatus(id, status) {
+    try {
+      const res = await adminApi.updateOrderStatus(id, status);
+      if (status === 'Delivered' && res.success) {
+        alert('Order marked Delivered — a loyalty stamp has been awarded to the customer (if linked to an account).');
+      }
+      loadOrders();
+    } catch (e) {
+      alert('Could not update order status');
+      loadOrders();
+    }
+  }
+
+  loadOrders();
+</script>
+</body>
+</html>

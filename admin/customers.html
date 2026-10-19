@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#3d0c1d">
+<meta name="robots" content="noindex, nofollow">
+<title>Customers — RS Store Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/admin.css">
+<link rel="icon" type="image/png" href="../images/favicon.png">
+</head>
+<body>
+
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a href="dashboard.html" class="brand"><img src="../images/logo.png" alt="RS Store logo" class="brand-logo"><span class="brand-text">RS <span>Store</span></span></a>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="products.html">Products</a>
+      <a href="orders.html">Orders</a>
+      <a href="customers.html" class="active">Customers</a>
+      <a href="settings.html">Site Settings</a>
+      <a href="account.html">Account</a>
+    </nav>
+    <p class="logout" onclick="auth.logout()">Log out</p>
+  </aside>
+
+  <main class="main">
+    <div class="page-header"><h1>Customers</h1></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Mobile</th><th>Email</th><th>Address</th><th>Stamps</th><th>Rewards</th><th>Joined</th></tr></thead>
+        <tbody id="customers-body"><tr><td colspan="7" class="empty-row">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script src="../js/config.js"></script>
+<script src="js/adminApi.js"></script>
+<script>
+  auth.requireAuth();
+
+  async function loadCustomers() {
+    const tbody = document.getElementById('customers-body');
+    try {
+      const res = await adminApi.getCustomers();
+      const customers = res.data || [];
+
+      tbody.innerHTML = customers.length
+        ? customers.map(c => {
+            const addr = c.address;
+            const addrText = addr && (addr.line1 || addr.city)
+              ? `${addr.line1 || ''}${addr.city ? ', ' + addr.city : ''}${addr.state ? ', ' + addr.state : ''}${addr.pincode ? ' - ' + addr.pincode : ''}`
+              : '<span style="opacity:0.5;">Not provided</span>';
+            return `
+              <tr>
+                <td data-label="Name">${c.name}</td>
+                <td data-label="Mobile">${c.phone}</td>
+                <td data-label="Email">${c.email || '<span style="opacity:0.5;">—</span>'}</td>
+                <td data-label="Address">${addrText}</td>
+                <td data-label="Stamps"><span class="stamp-pill"><i class="fa-solid fa-gem"></i> ${c.stamps || 0} / 7</span></td>
+                <td data-label="Rewards">${c.rewardsAvailable > 0 ? `<span class="badge Delivered">${c.rewardsAvailable} available</span>` : '<span style="opacity:0.5;">0</span>'}</td>
+                <td data-label="Joined">${new Date(c.createdAt).toLocaleDateString()}</td>
+              </tr>`;
+          }).join('')
+        : '<tr><td colspan="7" class="empty-row">No customers have registered yet.</td></tr>';
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-row">Could not load customers.</td></tr>';
+    }
+  }
+
+  loadCustomers();
+</script>
+</body>
+</html>

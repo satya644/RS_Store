@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Details — RS Store</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="icon" type="image/png" href="../images/favicon.png">
+<style>
+  .page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 32px 80px;
+  }
+  .detail-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 48px;
+    align-items: start;
+    margin-bottom: 60px;
+  }
+  .detail-image {
+    aspect-ratio: 1;
+    background: #fff;
+    border: 1px solid rgba(197, 155, 63, 0.25);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(43, 5, 18, 0.05);
+  }
+  .detail-image img, .detail-image video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .thumb-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .thumb-item {
+    width: 70px;
+    height: 70px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    opacity: 0.65;
+    transition: all 0.25s ease;
+  }
+  .thumb-item.active, .thumb-item:hover {
+    border-color: #c59b3f;
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+  .thumb-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .detail-info h1 {
+    font-size: 38px;
+    color: #2b0512;
+    margin: 8px 0 12px;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 600;
+  }
+  .product-material {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #ad822c;
+  }
+  .detail-price {
+    font-size: 30px;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 600;
+    color: #580c25;
+    margin: 14px 0 20px;
+  }
+  .price-strike {
+    text-decoration: line-through;
+    color: #9f8c92;
+    font-size: 18px;
+    margin-right: 10px;
+  }
+  .detail-desc {
+    color: #4a343b;
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+  .qty-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .qty-control {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #c59b3f;
+    border-radius: 4px;
+    background: #ffffff;
+  }
+  .qty-control button {
+    width: 38px;
+    height: 38px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #580c25;
+  }
+  .qty-control span {
+    width: 34px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .stock-note {
+    font-size: 13px;
+    color: #ad822c;
+    font-weight: 500;
+  }
+
+  /* Centered Reviews & Rating Section */
+  .reviews-section {
+    border-top: 1px solid rgba(197, 155, 63, 0.3);
+    padding-top: 48px;
+    margin: 40px auto 0;
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .reviews-section h2 {
+    font-size: 32px;
+    text-align: center;
+    margin-bottom: 28px;
+    color: #2b0512;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+  .reviews-list {
+    width: 100%;
+    margin-bottom: 44px;
+  }
+  .review-card {
+    background: #ffffff;
+    border: 1px solid rgba(197, 155, 63, 0.25);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(43, 5, 18, 0.04);
+  }
+  .review-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .review-form {
+    width: 100%;
+    max-width: 580px;
+    background: #ffffff;
+    padding: 32px 36px;
+    border-radius: 12px;
+    border: 1px solid rgba(197, 155, 63, 0.35);
+    box-shadow: 0 6px 24px rgba(43, 5, 18, 0.06);
+    margin: 0 auto;
+    text-align: center;
+  }
+  .review-form h3 {
+    font-size: 26px;
+    margin-bottom: 20px;
+    color: #2b0512;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+  .review-form label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #8c681d;
+    display: block;
+    margin-bottom: 8px;
+    text-align: left;
+  }
+  .review-form input, .review-form textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid rgba(197, 155, 63, 0.35);
+    border-radius: 6px;
+    background: #faf7f2;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 18px;
+    box-sizing: border-box;
+    font-family: inherit;
+  }
+  .review-form input:focus, .review-form textarea:focus {
+    border-color: #c59b3f;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(197, 155, 63, 0.2);
+  }
+  
+  /* Centered Star Rating Controls */
+  .star-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .star-input {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    font-size: 28px;
+    color: #ebd39b;
+    cursor: pointer;
+  }
+  .star-input span {
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+  .star-input span:hover {
+    transform: scale(1.2);
+  }
+  .star-input span.active {
+    color: #d4a02c;
+  }
+  .submit-btn-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 860px) {
+    .detail-wrap { grid-template-columns: 1fr; gap: 28px; }
+    .page-container { padding: 18px; }
+    .review-form { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="RS Store logo" class="brand-logo"><span class="brand-text">RS <span>Store</span></span></a>
+    <form class="header-search" onsubmit="return goSearch(event, 'products.html')">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="header-search-input" placeholder="Search jewellery…">
+    </form>
+    <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="cart.html" class="cart-link"><i class="fa-solid fa-cart-shopping"></i> <span class="cart-badge">0</span></a>
+      <span id="profile-icon-slot" data-prefix=""></span>
+    </nav>
+  </div>
+</header>
+
+<div class="back-bar"><button class="back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i> Back</button></div>
+
+<main class="page-container">
+  <div id="detail-root"><p class="empty-state">Loading piece details…</p></div>
+  
+  <section class="reviews-section" id="reviews-root" style="display:none;"></section>
+
+  <div id="suggested-wrap" style="display:none; margin-top: 50px;">
+    <div class="section-title"><h2>You may also like</h2></div>
+    <div class="product-grid" id="suggested-grid"></div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <a href="../index.html" class="brand"><img src="../images/logo.png" alt="RS Store logo" class="brand-logo"><span class="brand-text">RS <span>Store</span></span></a>
+      <p>Small-batch jewellery, made with care and worn with pride. Handcrafted in India.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Shop</h4>
+      <a href="products.html">Full collection</a>
+      <a href="cart.html">Your cart</a>
+    </div>
+    <div class="footer-col">
+      <h4>Reach us</h4>
+      <p>sm9268459@gmail.com</p>
+      <a href="tel:+916386325046">+91 63863 25046</a>
+    </div>
+  </div>
+  <p class="footer-bottom">© 2026 RS Store. All pieces made with love. Founder: Satyam Maurya</p>
+</footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/cart.js"></script>
+<script src="../js/customerAuth.js"></script>
+<script src="../js/authGuard.js"></script>
+<script src="../js/searchSuggest.js"></script>
+<script src="../js/whatsapp.js"></script>
+<script>
+  function goSearch(e, targetUrl) {
+    e.preventDefault();
+    const q = document.getElementById('header-search-input').value.trim();
+    window.location.href = targetUrl + (q ? '?search=' + encodeURIComponent(q) : '');
+    return false;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const productId = params.get('id');
+  let currentProduct = null;
+  let qty = 1;
+  let selectedRating = 5;
+
+  function starsHtml(rating) {
+    const full = Math.round(Number(rating) || 0);
+    let html = '<span class="stars" style="color:#d4a02c;">';
+    for (let i = 1; i <= 5; i++) html += i <= full ? '★' : '<span style="color:#e4d8c8;">★</span>';
+    html += '</span>';
+    return html;
+  }
+
+  async function loadProduct() {
+    const root = document.getElementById('detail-root');
+    if (!productId) {
+      root.innerHTML = '<p class="empty-state">No product selected. <a href="products.html" style="color:#ad822c; text-decoration:underline;">Browse pieces</a></p>';
+      return;
+    }
+    try {
+      const res = await api.getProduct(productId);
+      if (!res.data) {
+        root.innerHTML = '<p class="empty-state">This piece could not be found. <a href="products.html" style="color:#ad822c; text-decoration:underline;">Back to collection</a></p>';
+        return;
+      }
+      currentProduct = res.data;
+      render();
+      loadReviews();
+      loadSuggested();
+    } catch (e) {
+      root.innerHTML = '<p class="empty-state">Could not connect to server right now.</p>';
+    }
+  }
+
+  function render() {
+    const p = currentProduct;
+    const images = (p.images && p.images.length) ? p.images : [{ url: 'https://via.placeholder.com/600x600/f5ead9/6b1233?text=RS+Store' }];
+    const hasDiscount = Number(p.discountPrice) > 0;
+    const finalPrice = hasDiscount ? p.discountPrice : p.price;
+    const hasVideo = p.video && p.video.url;
+    const isOutOfStock = !p.stock || p.stock <= 0;
+    qty = isOutOfStock ? 0 : 1;
+
+    document.getElementById('detail-root').innerHTML = `
+      <div class="detail-wrap">
+        <div>
+          <div class="detail-image"><img id="main-detail-image" src="${images[0].url}" alt="${p.name}"></div>
+          ${(images.length > 1 || hasVideo) ? `
+            <div class="thumb-row">
+              ${images.map((im, i) => `<div class="thumb-item ${i === 0 ? 'active' : ''}" data-type="image" data-src="${im.url}" onclick="selectMedia(this)"><img src="${im.url}" alt=""></div>`).join('')}
+              ${hasVideo ? `<div class="thumb-item" data-type="video" data-src="${p.video.url}" onclick="selectMedia(this)" style="display:flex; align-items:center; justify-content:center; font-size:20px; color:#580c25;"><i class="fa-solid fa-play"></i></div>` : ''}
+            </div>` : ''}
+        </div>
+        <div class="detail-info">
+          <p class="product-material">${p.material || 'Handcrafted'} · ${p.category || 'Jewellery'}</p>
+          <h1>${p.name}</h1>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+            ${p.numReviews > 0 ? `${starsHtml(p.averageRating)}<span class="rating-count" style="font-size:13px; color:#7a656c;">(${p.numReviews} review${p.numReviews > 1 ? 's' : ''})</span>` : '<span style="font-size:13px; color:#9f8c92;">No reviews yet</span>'}
+          </div>
+          <p class="detail-price">
+            ${hasDiscount ? `<span class="price-strike">₹${p.price}</span>` : ''}
+            ₹${finalPrice}
+          </p>
+          <p class="detail-desc">${p.description || 'Finely crafted piece with premium materials and royal finishing.'}</p>
+
+          <div class="qty-row">
+            <div class="qty-control" style="${isOutOfStock ? 'opacity:0.5; pointer-events:none;' : ''}">
+              <button type="button" onclick="changeQty(-1)">−</button>
+              <span id="qty-display">${qty}</span>
+              <button type="button" onclick="changeQty(1)">+</button>
+            </div>
+            <span class="stock-note" style="${isOutOfStock ? 'color:#a32239;' : ''}">${!isOutOfStock ? p.stock + ' in stock' : 'Out of stock'}</span>
+          </div>
+
+          <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:20px;">
+            <button class="btn" id="add-btn" onclick="addToCart()" ${isOutOfStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+              Add to cart
+            </button>
+            <button class="btn btn-outline" id="order-btn" onclick="orderNow()" ${isOutOfStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+              Order now
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function selectMedia(el) {
+    document.querySelectorAll('.thumb-item').forEach((t) => t.classList.remove('active'));
+    el.classList.add('active');
+    const wrap = document.querySelector('.detail-image');
+    if (el.dataset.type === 'video') {
+      wrap.innerHTML = `<video src="${el.dataset.src}" controls autoplay style="width:100%; height:100%; object-fit:cover;"></video>`;
+    } else {
+      wrap.innerHTML = `<img id="main-detail-image" src="${el.dataset.src}" alt="">`;
+    }
+  }
+
+  function changeQty(delta) {
+    if (!currentProduct || !currentProduct.stock || currentProduct.stock <= 0) return;
+    qty = Math.max(1, Math.min(currentProduct.stock, qty + delta));
+    document.getElementById('qty-display').textContent = qty;
+  }
+
+  function addToCart() {
+    if (!currentProduct || !currentProduct.stock || currentProduct.stock <= 0) return;
+    cart.add(currentProduct, qty);
+    const btn = document.getElementById('add-btn');
+    const original = btn.textContent;
+    btn.textContent = 'Added ✓';
+    setTimeout(() => (btn.textContent = original), 1200);
+  }
+
+  function orderNow() {
+    if (!currentProduct || !currentProduct.stock || currentProduct.stock <= 0) return;
+    cart.add(currentProduct, qty);
+    window.location.href = 'checkout.html';
+  }
+
+  async function loadSuggested() {
+    try {
+      const res = await api.getProducts(`?category=${encodeURIComponent(currentProduct.category)}&limit=8`);
+      const others = (res.data || []).filter((p) => p._id !== currentProduct._id).slice(0, 4);
+      if (others.length === 0) return;
+
+      document.getElementById('suggested-wrap').style.display = 'block';
+      const grid = document.getElementById('suggested-grid');
+      grid.innerHTML = others.map((p) => {
+        const img = p.images?.[0]?.url || 'https://via.placeholder.com/400x400/f5ead9/6b1233?text=RS+Store';
+        const hasDiscount = Number(p.discountPrice) > 0;
+        return `
+          <a class="product-card" href="product.html?id=${p._id}">
+            <div class="product-image"><img src="${img}" alt="${p.name}" loading="lazy"></div>
+            <p class="product-material">${p.material || 'Handcrafted'}</p>
+            <h3 class="product-name">${p.name}</h3>
+            ${p.numReviews > 0 ? `${starsHtml(p.averageRating)}<span class="rating-count">(${p.numReviews})</span>` : ''}
+            <p class="product-price">
+              ${hasDiscount ? `<span class="price-strike">₹${p.price}</span>` : ''}
+              ₹${hasDiscount ? p.discountPrice : p.price}
+            </p>
+          </a>`;
+      }).join('');
+    } catch (e) { /* skip */ }
+  }
+
+  async function loadReviews() {
+    const root = document.getElementById('reviews-root');
+    root.style.display = 'flex';
+    try {
+      const res = await api.getReviews(productId);
+      const reviews = res.data || [];
+      const list = reviews.length
+        ? reviews.map(r => `
+            <div class="review-card">
+              <div class="review-top">
+                <span class="name" style="font-family:'Cormorant Garamond', serif; font-size:18px; color:#2b0512;">${r.customerName}</span>
+                <span class="date" style="font-size:12px; color:#7a656c;">${new Date(r.createdAt).toLocaleDateString()}</span>
+              </div>
+              ${starsHtml(r.rating)}
+              <p style="margin-top:8px; color:#4a343b; font-size:14px;">${r.comment}</p>
+            </div>`).join('')
+        : '<p class="rating-count" style="padding:12px 0; color:#7a656c; text-align:center;">Be the first to review this piece.</p>';
+
+      root.innerHTML = `
+        <h2>Customer Reviews</h2>
+        <div class="reviews-list">${list}</div>
+        <div class="review-form">
+          <h3>Write a review</h3>
+          <form id="review-form">
+            <label>Your name</label>
+            <input type="text" id="r-name" placeholder="Enter your name" required>
+            <label style="text-align:center;">Rating</label>
+            <div class="star-wrapper">
+              <div class="star-input" id="star-input">
+                ${[1,2,3,4,5].map(n => `<span data-val="${n}" onclick="setRating(${n})">★</span>`).join('')}
+              </div>
+            </div>
+            <label>Your review</label>
+            <textarea id="r-comment" rows="3" placeholder="Share your experience with this piece…" required></textarea>
+            <div class="submit-btn-wrap">
+              <button type="submit" class="btn">Submit review</button>
+            </div>
+            <p class="msg" id="review-msg" style="margin-top:10px; font-size:13px;"></p>
+          </form>
+        </div>
+      `;
+      updateStarInput();
+
+      if (typeof customerAuth !== 'undefined' && customerAuth.isLoggedIn()) {
+        const c = customerAuth.getCustomer();
+        if (c?.name) document.getElementById('r-name').value = c.name;
+      }
+
+      document.getElementById('review-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('review-msg');
+        try {
+          const result = await api.addReview(productId, {
+            customerName: document.getElementById('r-name').value,
+            rating: selectedRating,
+            comment: document.getElementById('r-comment').value,
+          });
+          if (!result.success) throw new Error(result.message);
+          msg.style.color = '#ad822c';
+          msg.textContent = 'Thank you for your review!';
+          const productRes = await api.getProduct(productId);
+          currentProduct = productRes.data;
+          render();
+          loadReviews();
+        } catch (err) {
+          msg.style.color = '#a32239';
+          msg.textContent = err.message || 'Could not submit review.';
+        }
+      });
+    } catch (e) {
+      root.innerHTML = '<h2>Reviews</h2><p class="rating-count">Could not load reviews.</p>';
+    }
+  }
+
+  function setRating(n) { selectedRating = n; updateStarInput(); }
+
+  function updateStarInput() {
+    document.querySelectorAll('#star-input span').forEach((el) => {
+      el.classList.toggle('active', Number(el.dataset.val) <= selectedRating);
+    });
+  }
+
+  loadProduct();
+</script>
+</body>
+</html>

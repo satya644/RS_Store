@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Cart — RS Store</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="icon" type="image/png" href="../images/favicon.png">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="../index.html" class="brand"><img src="../images/logo.png" alt="RS Store logo" class="brand-logo"><span class="brand-text">RS <span>Store</span></span></a>
+    <form class="header-search" onsubmit="return goSearch(event, 'products.html')">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="header-search-input" placeholder="Search jewellery…">
+    </form>
+    <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="cart.html" class="cart-link"><i class="fa-solid fa-cart-shopping"></i> <span class="cart-badge">0</span></a>
+      <span id="profile-icon-slot" data-prefix=""></span>
+    </nav>
+  </div>
+</header>
+
+<div class="back-bar"><button class="back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i> Back</button></div>
+
+<div class="page-wrap">
+  <h1>Your cart</h1>
+  <div id="cart-root"></div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <a href="../index.html" class="brand"><img src="../images/logo.png" alt="RS Store logo" class="brand-logo"><span class="brand-text">RS <span>Store</span></span></a>
+      <p>Small-batch jewellery, made with care and worn with pride.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Shop</h4>
+      <a href="products.html">Full collection</a>
+      <a href="cart.html">Your cart</a>
+    </div>
+    <div class="footer-col">
+      <h4>Reach us</h4>
+      <p>sm9268459@gmail.com</p>
+      <a href="tel:+916386325046">+91 63863 25046</a>
+    </div>
+  </div>
+  <p class="footer-bottom">© 2026 RS Store. All pieces made with love. Founder: Satyam Maurya</p>
+</footer>
+
+<script src="../js/config.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/cart.js"></script>
+<script src="../js/customerAuth.js"></script>
+<script src="../js/authGuard.js"></script>
+<script src="../js/searchSuggest.js"></script>
+<script src="../js/whatsapp.js"></script>
+<script>
+  function goSearch(e, targetUrl) {
+    e.preventDefault();
+    const q = document.getElementById('header-search-input').value.trim();
+    window.location.href = targetUrl + (q ? '?search=' + encodeURIComponent(q) : '');
+    return false;
+  }
+
+  function render() {
+    const items = cart.get();
+    const root = document.getElementById('cart-root');
+
+    if (items.length === 0) {
+      root.innerHTML = `
+        <p class="empty-state" style="padding: 48px 0;">Your cart is empty.</p>
+        <a href="products.html" class="btn btn-outline">Browse the collection</a>
+      `;
+      return;
+    }
+
+    const rows = items.map(i => `
+      <div class="cart-row">
+        <img src="${i.image || 'https://via.placeholder.com/90x90/f5ead9/6b1233?text=RS'}" alt="${i.name}">
+        <div>
+          <p class="name">${i.name}</p>
+          <span class="remove" onclick="removeItem('${i.productId}')">Remove</span>
+        </div>
+        <div class="qty-control">
+          <button onclick="updateQty('${i.productId}', ${i.quantity - 1})">−</button>
+          <span>${i.quantity}</span>
+          <button onclick="updateQty('${i.productId}', ${i.quantity + 1})">+</button>
+        </div>
+        <p>₹${i.price * i.quantity}</p>
+      </div>
+    `).join('');
+
+    root.innerHTML = `
+      ${rows}
+      <div class="cart-summary"><span>Total</span><span>₹${cart.total()}</span></div>
+      <a href="checkout.html" class="btn" style="width:100%; text-align:center; margin-top:16px;">Proceed to checkout</a>
+    `;
+  }
+
+  function removeItem(id) { cart.remove(id); render(); }
+  function updateQty(id, qty) {
+    if (qty < 1) return removeItem(id);
+    cart.updateQuantity(id, qty);
+    render();
+  }
+
+  render();
+</script>
+</body>
+</html>
