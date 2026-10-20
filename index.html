@@ -7,8 +7,102 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" type="image/png" href="images/favicon.png">
+<style>
+  /* App Install Top Banner */
+  #app-install-banner {
+    display: none;
+    background: linear-gradient(135deg, #1f030d 0%, #3f091c 50%, #580c25 100%);
+    color: #ffffff;
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(197, 155, 63, 0.4);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .app-banner-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .app-banner-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .app-banner-info i {
+    font-size: 26px;
+    color: #4ade80;
+  }
+  .app-banner-text strong {
+    font-size: 14px;
+    display: block;
+    color: #ffffff;
+    font-weight: 600;
+  }
+  .app-banner-text span {
+    font-size: 12px;
+    color: #fbf5e6;
+    opacity: 0.85;
+  }
+  .app-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .btn-download-app {
+    padding: 6px 16px;
+    font-size: 12px;
+    background: #c59b3f;
+    border: 1px solid #ebd39b;
+    color: #1f030d;
+    font-weight: 600;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-download-app:hover {
+    background: #ebd39b;
+    transform: translateY(-1px);
+  }
+  .app-banner-close {
+    cursor: pointer;
+    font-size: 20px;
+    color: #ebd39b;
+    opacity: 0.8;
+    line-height: 1;
+    padding: 2px 4px;
+  }
+  .app-banner-close:hover {
+    opacity: 1;
+    color: #ffffff;
+  }
+</style>
 </head>
 <body>
+
+<!-- App Install Banner (Sirf Browser me dikhega, APK me nahi) -->
+<div id="app-install-banner">
+  <div class="app-banner-inner">
+    <div class="app-banner-info">
+      <i class="fa-brands fa-android"></i>
+      <div class="app-banner-text">
+        <strong>RS Store Android App</strong>
+        <span>Faster shopping & direct order tracking</span>
+      </div>
+    </div>
+    <div class="app-banner-actions">
+      <a href="https://satya644.github.io/RS_Store/app-release.apk" download class="btn-download-app">
+        <i class="fa-solid fa-download"></i> Install App
+      </a>
+      <span class="app-banner-close" onclick="dismissAppBanner()" title="Close">&times;</span>
+    </div>
+  </div>
+</div>
 
 <header class="site-header">
   <div class="header-inner">
@@ -81,6 +175,35 @@
 <script src="js/searchSuggest.js"></script>
 <script src="js/whatsapp.js"></script>
 <script>
+  // APK vs Browser Auto Detection
+  function checkAppEnvironment() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+    // Webview, standalone app, ya url flag me banner hide hoga
+    const isWebView = /(wv|WebView|Version\/[\d.]+.*Chrome\/[\d.]+.*Mobile|MobileApp)/i.test(ua) 
+                      || window.matchMedia('(display-mode: standalone)').matches
+                      || window.navigator.standalone === true
+                      || window.location.search.includes('app=true');
+
+    const isBannerDismissed = sessionStorage.getItem('rs_app_banner_dismissed');
+
+    const banner = document.getElementById('app-install-banner');
+    if (!banner) return;
+
+    if (isWebView || isBannerDismissed) {
+      banner.style.display = 'none';
+    } else {
+      banner.style.display = 'block';
+    }
+  }
+
+  function dismissAppBanner() {
+    const banner = document.getElementById('app-install-banner');
+    if (banner) banner.style.display = 'none';
+    sessionStorage.setItem('rs_app_banner_dismissed', 'true');
+  }
+
+  document.addEventListener('DOMContentLoaded', checkAppEnvironment);
+
   function starsHtml(rating) {
     const full = Math.round(rating);
     let html = '<span class="stars">';
@@ -105,7 +228,7 @@
 
   function renderCard(p) {
     const img = p.images?.[0]?.url || 'https://via.placeholder.com/400x400/f5ead9/6b1233?text=RS+Store';
-    const hasDiscount = p.discountPrice > 0;
+    const hasDiscount = Number(p.discountPrice) > 0;
     return `
       <a class="product-card" href="pages/product.html?id=${p._id}">
         <div class="product-image"><img src="${img}" alt="${p.name}" loading="lazy"></div>
