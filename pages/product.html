@@ -172,7 +172,6 @@
     border-color: #c59b3f;
   }
 
-  /* Smooth Custom Toast (No ugly browser alert) */
   #share-toast {
     display: none;
     position: fixed;
@@ -189,7 +188,7 @@
     box-shadow: 0 6px 18px rgba(0,0,0,0.25);
   }
 
-  /* Centered Reviews & Rating Section */
+  /* Reviews & Rating Section */
   .reviews-section {
     border-top: 1px solid rgba(197, 155, 63, 0.3);
     padding-top: 48px;
@@ -289,6 +288,13 @@
     margin-top: 8px;
   }
 
+  /* Suggested Products Wrap */
+  .suggested-section {
+    margin-top: 60px;
+    padding-top: 36px;
+    border-top: 1px solid rgba(197, 155, 63, 0.3);
+  }
+
   @media (max-width: 860px) {
     .detail-wrap { grid-template-columns: 1fr; gap: 28px; }
     .page-container { padding: 18px; }
@@ -321,8 +327,12 @@
   
   <section class="reviews-section" id="reviews-root" style="display:none;"></section>
 
-  <div id="suggested-wrap" style="display:none; margin-top: 50px;">
-    <div class="section-title"><h2>You may also like</h2></div>
+  <!-- Suggested products block -->
+  <div class="suggested-section" id="suggested-wrap" style="display:none;">
+    <div class="section-title">
+      <h2>You may also like</h2>
+      <a href="products.html" style="font-size:14px; color:#ad822c;">View all</a>
+    </div>
     <div class="product-grid" id="suggested-grid"></div>
   </div>
 </main>
@@ -471,7 +481,6 @@
     return { title: `${p.name} — RS Store`, text, url: shareUrl };
   }
 
-  // Direct WhatsApp Share (100% reliable on WebView & Web)
   function shareViaWhatsApp() {
     const payload = getSharePayload();
     if (!payload) return;
@@ -479,7 +488,6 @@
     window.open(waUrl, '_blank');
   }
 
-  // Native App Share with smooth Toast fallback
   async function shareViaOtherApps() {
     const payload = getSharePayload();
     if (!payload) return;
@@ -492,12 +500,9 @@
           url: payload.url,
         });
         return;
-      } catch (err) {
-        /* User cancelled dialog */
-      }
+      } catch (err) {}
     }
 
-    // Fallback: Copy to clipboard and show toast notification
     try {
       await navigator.clipboard.writeText(payload.text);
       showToast('Product link & details copied ✓');
@@ -554,15 +559,23 @@
     window.location.href = 'checkout.html';
   }
 
+  // Guaranteed fallback: If same category has no products, load latest products
   async function loadSuggested() {
     try {
-      const res = await api.getProducts(`?category=${encodeURIComponent(currentProduct.category)}&limit=8`);
-      const others = (res.data || []).filter((p) => p._id !== currentProduct._id).slice(0, 4);
+      let res = await api.getProducts(`?category=${encodeURIComponent(currentProduct.category)}&limit=8`);
+      let others = (res.data || []).filter((p) => p._id !== currentProduct._id);
+      
+      // Fallback: Agar same category me doosra product na ho toh store se products uthao
+      if (others.length === 0) {
+        const fallbackRes = await api.getProducts(`?limit=6`);
+        others = (fallbackRes.data || []).filter((p) => p._id !== currentProduct._id);
+      }
+
       if (others.length === 0) return;
 
       document.getElementById('suggested-wrap').style.display = 'block';
       const grid = document.getElementById('suggested-grid');
-      grid.innerHTML = others.map((p) => {
+      grid.innerHTML = others.slice(0, 4).map((p) => {
         const img = p.images?.[0]?.url || 'https://via.placeholder.com/400x400/f5ead9/6b1233?text=RS+Store';
         const hasDiscount = Number(p.discountPrice) > 0;
         return `
@@ -573,11 +586,11 @@
             ${p.numReviews > 0 ? `${starsHtml(p.averageRating)}<span class="rating-count">(${p.numReviews})</span>` : ''}
             <p class="product-price">
               ${hasDiscount ? `<span class="price-strike">₹${p.price}</span>` : ''}
-              ₹${finalPrice}
+              ₹${hasDiscount ? p.discountPrice : p.price}
             </p>
           </a>`;
       }).join('');
-    } catch (e) { /* skip */ }
+    } catch (e) { /* keep silent */ }
   }
 
   async function loadReviews() {
