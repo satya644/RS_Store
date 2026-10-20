@@ -1,4 +1,3 @@
-
 const auth = {
   getToken() { return localStorage.getItem('sj_admin_token'); },
   setToken(token) { localStorage.setItem('sj_admin_token', token); },
@@ -10,9 +9,21 @@ const auth = {
     window.location.href = 'login.html';
   },
   requireAuth() {
-    if (!auth.getToken()) window.location.href = 'login.html';
+    const isLoginPage = window.location.pathname.endsWith('login.html');
+    const token = auth.getToken();
+    if (!token && !isLoginPage) {
+      window.location.replace('login.html');
+    }
   },
 };
+
+// Immediate strict auth check for any protected admin page
+(function enforceStrictAuth() {
+  const isLoginPage = window.location.pathname.endsWith('login.html');
+  if (!isLoginPage && !auth.getToken()) {
+    window.location.replace('login.html');
+  }
+})();
 
 function authHeaders(extra = {}) {
   return { Authorization: `Bearer ${auth.getToken()}`, ...extra };
@@ -85,9 +96,12 @@ const adminApi = {
   },
 };
 
-// On phones the menu is a swipeable strip: scroll so the current page's tab is visible
+// Auto scroll mobile navigation bar to active item
 document.addEventListener('DOMContentLoaded', () => {
+  auth.requireAuth();
   const nav = document.querySelector('.sidebar nav');
   const active = nav && nav.querySelector('a.active');
-  if (nav && active) nav.scrollLeft = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
+  if (nav && active) {
+    nav.scrollLeft = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
+  }
 });
