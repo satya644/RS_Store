@@ -92,7 +92,7 @@
     color: #4a343b;
     font-size: 15px;
     line-height: 1.7;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
   }
   .qty-row {
     display: flex;
@@ -128,30 +128,30 @@
     font-weight: 500;
   }
 
-  /* Share Button Style */
+  /* Share Button Styling */
   .btn-share {
+    background: transparent;
+    color: #8c681d;
+    border: 1px solid #ebd39b;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
-    padding: 12px 20px;
-    font-family: var(--sans);
-    font-size: 14px;
+    padding: 10px 18px;
+    font-size: 13px;
     font-weight: 500;
     border-radius: 4px;
-    border: 1px solid #c59b3f;
-    background: #faf7f2;
-    color: #580c25;
     cursor: pointer;
     transition: all 0.25s ease;
+    margin-bottom: 20px;
   }
   .btn-share:hover {
-    background: #c59b3f;
-    color: #ffffff;
+    background: #fbf5e6;
+    border-color: #c59b3f;
+    color: #580c25;
     transform: translateY(-2px);
   }
 
-  /* Reviews & Form */
+  /* Centered Reviews & Rating Section */
   .reviews-section {
     border-top: 1px solid rgba(197, 155, 63, 0.3);
     padding-top: 48px;
@@ -390,6 +390,13 @@
           </p>
           <p class="detail-desc">${p.description || 'Finely crafted piece with premium materials and royal finishing.'}</p>
 
+          <!-- Native Share Button -->
+          <div>
+            <button type="button" class="btn-share" onclick="shareProduct()">
+              <i class="fa-solid fa-share-nodes"></i> Share this piece
+            </button>
+          </div>
+
           <div class="qty-row">
             <div class="qty-control" style="${isOutOfStock ? 'opacity:0.5; pointer-events:none;' : ''}">
               <button type="button" onclick="changeQty(-1)">−</button>
@@ -399,20 +406,47 @@
             <span class="stock-note" style="${isOutOfStock ? 'color:#a32239;' : ''}">${!isOutOfStock ? p.stock + ' in stock' : 'Out of stock'}</span>
           </div>
 
-          <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:20px;">
+          <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:14px;">
             <button class="btn" id="add-btn" onclick="addToCart()" ${isOutOfStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
               Add to cart
             </button>
             <button class="btn btn-outline" id="order-btn" onclick="orderNow()" ${isOutOfStock ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
               Order now
             </button>
-            <button class="btn-share" id="share-btn" onclick="shareProduct()">
-              <i class="fa-solid fa-share-nodes"></i> Share
-            </button>
           </div>
         </div>
       </div>
     `;
+  }
+
+  // Smart Social & Link Sharing function
+  async function shareProduct() {
+    if (!currentProduct) return;
+    const p = currentProduct;
+    const finalPrice = Number(p.discountPrice) > 0 ? p.discountPrice : p.price;
+    const shareUrl = window.location.href;
+    const shareTitle = `${p.name} — RS Store`;
+    const shareText = `Check out this handcrafted piece: ${p.name} for only ₹${finalPrice} on RS Store!\n\nView details here:`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        /* User cancelled share dialog */
+      }
+    } else {
+      // Fallback: Copy to clipboard if Web Share API is unsupported
+      try {
+        await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+        alert('Product details and link copied to clipboard! You can now paste and send it anywhere.');
+      } catch (e) {
+        prompt('Copy this product link:', shareUrl);
+      }
+    }
   }
 
   function selectMedia(el) {
@@ -445,38 +479,6 @@
     if (!currentProduct || !currentProduct.stock || currentProduct.stock <= 0) return;
     cart.add(currentProduct, qty);
     window.location.href = 'checkout.html';
-  }
-
-  // Web Share API Function
-  async function shareProduct() {
-    if (!currentProduct) return;
-    const shareBtn = document.getElementById('share-btn');
-    const originalText = shareBtn.innerHTML;
-
-    const shareData = {
-      title: `${currentProduct.name} — RS Store`,
-      text: `Check out this handcrafted piece: ${currentProduct.name} at ₹${currentProduct.discountPrice > 0 ? currentProduct.discountPrice : currentProduct.price}`,
-      url: window.location.href
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        // User closed share dialog
-      }
-    } else {
-      // Fallback for PC/desktop: Copy link to clipboard
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        shareBtn.innerHTML = '<i class="fa-solid fa-check"></i> Link Copied!';
-        setTimeout(() => {
-          shareBtn.innerHTML = originalText;
-        }, 1800);
-      } catch (err) {
-        alert('Product link: ' + window.location.href);
-      }
-    }
   }
 
   async function loadSuggested() {
