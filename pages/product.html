@@ -92,7 +92,7 @@
     color: #4a343b;
     font-size: 15px;
     line-height: 1.7;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
   .qty-row {
     display: flex;
@@ -128,27 +128,65 @@
     font-weight: 500;
   }
 
-  /* Share Button Styling */
-  .btn-share {
-    background: transparent;
-    color: #8c681d;
-    border: 1px solid #ebd39b;
+  /* Direct Share Buttons */
+  .share-action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+  }
+  .btn-share-whatsapp {
+    background: #25D366;
+    color: #ffffff;
+    border: none;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 18px;
+    padding: 9px 18px;
     font-size: 13px;
     font-weight: 500;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.25s ease;
-    margin-bottom: 20px;
   }
-  .btn-share:hover {
-    background: #fbf5e6;
-    border-color: #c59b3f;
-    color: #580c25;
+  .btn-share-whatsapp:hover {
+    background: #1ebe57;
     transform: translateY(-2px);
+  }
+  .btn-share-more {
+    background: #ffffff;
+    color: #580c25;
+    border: 1px solid rgba(197, 155, 63, 0.4);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .btn-share-more:hover {
+    background: #faf7f2;
+    border-color: #c59b3f;
+  }
+
+  /* Smooth Custom Toast (No ugly browser alert) */
+  #share-toast {
+    display: none;
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2b0512;
+    color: #ffffff;
+    border: 1px solid #c59b3f;
+    padding: 10px 20px;
+    border-radius: 24px;
+    font-size: 13px;
+    z-index: 300;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
   }
 
   /* Centered Reviews & Rating Section */
@@ -289,6 +327,8 @@
   </div>
 </main>
 
+<div id="share-toast">Link & details copied ✓</div>
+
 <footer class="site-footer">
   <div class="footer-inner">
     <div>
@@ -390,10 +430,13 @@
           </p>
           <p class="detail-desc">${p.description || 'Finely crafted piece with premium materials and royal finishing.'}</p>
 
-          <!-- Native Share Button -->
-          <div>
-            <button type="button" class="btn-share" onclick="shareProduct()">
-              <i class="fa-solid fa-share-nodes"></i> Share this piece
+          <!-- Direct Sharing Buttons -->
+          <div class="share-action-row">
+            <button type="button" class="btn-share-whatsapp" onclick="shareViaWhatsApp()">
+              <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp
+            </button>
+            <button type="button" class="btn-share-more" onclick="shareViaOtherApps()">
+              <i class="fa-solid fa-share-nodes"></i> More
             </button>
           </div>
 
@@ -419,34 +462,64 @@
     `;
   }
 
-  // Smart Social & Link Sharing function
-  async function shareProduct() {
-    if (!currentProduct) return;
+  function getSharePayload() {
+    if (!currentProduct) return null;
     const p = currentProduct;
     const finalPrice = Number(p.discountPrice) > 0 ? p.discountPrice : p.price;
     const shareUrl = window.location.href;
-    const shareTitle = `${p.name} — RS Store`;
-    const shareText = `Check out this handcrafted piece: ${p.name} for only ₹${finalPrice} on RS Store!\n\nView details here:`;
+    const text = `✨ *${p.name}* on RS Store\nPrice: *₹${finalPrice}*\nCategory: ${p.category || 'Jewellery'}\n\nCheck out this handcrafted piece here:\n${shareUrl}`;
+    return { title: `${p.name} — RS Store`, text, url: shareUrl };
+  }
+
+  // Direct WhatsApp Share (100% reliable on WebView & Web)
+  function shareViaWhatsApp() {
+    const payload = getSharePayload();
+    if (!payload) return;
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(payload.text)}`;
+    window.open(waUrl, '_blank');
+  }
+
+  // Native App Share with smooth Toast fallback
+  async function shareViaOtherApps() {
+    const payload = getSharePayload();
+    if (!payload) return;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: shareTitle,
-          text: shareText,
-          url: shareUrl,
+          title: payload.title,
+          text: payload.text,
+          url: payload.url,
         });
+        return;
       } catch (err) {
-        /* User cancelled share dialog */
-      }
-    } else {
-      // Fallback: Copy to clipboard if Web Share API is unsupported
-      try {
-        await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-        alert('Product details and link copied to clipboard! You can now paste and send it anywhere.');
-      } catch (e) {
-        prompt('Copy this product link:', shareUrl);
+        /* User cancelled dialog */
       }
     }
+
+    // Fallback: Copy to clipboard and show toast notification
+    try {
+      await navigator.clipboard.writeText(payload.text);
+      showToast('Product link & details copied ✓');
+    } catch (e) {
+      const tempInput = document.createElement('textarea');
+      tempInput.value = payload.text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      showToast('Product link & details copied ✓');
+    }
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('share-toast');
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    setTimeout(() => {
+      toast.style.display = 'none';
+    }, 2400);
   }
 
   function selectMedia(el) {
@@ -500,7 +573,7 @@
             ${p.numReviews > 0 ? `${starsHtml(p.averageRating)}<span class="rating-count">(${p.numReviews})</span>` : ''}
             <p class="product-price">
               ${hasDiscount ? `<span class="price-strike">₹${p.price}</span>` : ''}
-              ₹${hasDiscount ? p.discountPrice : p.price}
+              ₹${finalPrice}
             </p>
           </a>`;
       }).join('');
