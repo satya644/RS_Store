@@ -63,7 +63,7 @@
     align-items: center;
     gap: 6px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
   }
   .btn-download-app:hover {
     background: #ebd39b;
@@ -175,22 +175,27 @@
 <script src="js/searchSuggest.js"></script>
 <script src="js/whatsapp.js"></script>
 <script>
-  // APK vs Browser Auto Detection
+  // Strict APK vs Mobile Browser Check
   function checkAppEnvironment() {
     const ua = navigator.userAgent || navigator.vendor || window.opera || '';
-    // Webview, standalone app, ya url flag me banner hide hoga
-    const isWebView = /(wv|WebView|Version\/[\d.]+.*Chrome\/[\d.]+.*Mobile|MobileApp)/i.test(ua) 
-                      || window.matchMedia('(display-mode: standalone)').matches
-                      || window.navigator.standalone === true
-                      || window.location.search.includes('app=true');
+    
+    // Strict identification for WebIntoApp, Android WebViews, Standalone PWAs & URL app parameters
+    const isApp = /(wv|\.0\.0\.0|WebView|Version\/.*Chrome|Android.*wv|MobileApp)/i.test(ua)
+                  || window.matchMedia('(display-mode: standalone)').matches
+                  || window.navigator.standalone === true
+                  || !!window.Android
+                  || !!window.AndroidInterface
+                  || window.location.search.includes('app=true')
+                  || window.location.search.includes('source=apk');
 
-    const isBannerDismissed = sessionStorage.getItem('rs_app_banner_dismissed');
-
+    const isBannerDismissed = localStorage.getItem('rs_app_banner_hidden');
     const banner = document.getElementById('app-install-banner');
+
     if (!banner) return;
 
-    if (isWebView || isBannerDismissed) {
+    if (isApp || isBannerDismissed) {
       banner.style.display = 'none';
+      banner.remove(); // APK me completely remove kar dega
     } else {
       banner.style.display = 'block';
     }
@@ -198,14 +203,19 @@
 
   function dismissAppBanner() {
     const banner = document.getElementById('app-install-banner');
-    if (banner) banner.style.display = 'none';
-    sessionStorage.setItem('rs_app_banner_dismissed', 'true');
+    if (banner) {
+      banner.style.display = 'none';
+      banner.remove();
+    }
+    localStorage.setItem('rs_app_banner_hidden', 'true');
   }
 
+  // DOM load hone se pehle aur load hote hi check chalayein
+  checkAppEnvironment();
   document.addEventListener('DOMContentLoaded', checkAppEnvironment);
 
   function starsHtml(rating) {
-    const full = Math.round(rating);
+    const full = Math.round(Number(rating) || 0);
     let html = '<span class="stars">';
     for (let i = 1; i <= 5; i++) html += i <= full ? '★' : '<span class="empty">★</span>';
     html += '</span>';
@@ -229,6 +239,7 @@
   function renderCard(p) {
     const img = p.images?.[0]?.url || 'https://via.placeholder.com/400x400/f5ead9/6b1233?text=RS+Store';
     const hasDiscount = Number(p.discountPrice) > 0;
+    const finalPrice = hasDiscount ? p.discountPrice : p.price;
     return `
       <a class="product-card" href="pages/product.html?id=${p._id}">
         <div class="product-image"><img src="${img}" alt="${p.name}" loading="lazy"></div>
@@ -237,7 +248,7 @@
         ${p.numReviews > 0 ? `${starsHtml(p.averageRating)}<span class="rating-count">(${p.numReviews})</span>` : ''}
         <p class="product-price">
           ${hasDiscount ? `<span class="price-strike">₹${p.price}</span>` : ''}
-          ₹${hasDiscount ? p.discountPrice : p.price}
+          ₹${finalPrice}
         </p>
       </a>`;
   }
