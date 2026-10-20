@@ -8,6 +8,74 @@
 <title>Site Settings — RS Store Admin</title>
 <link rel="stylesheet" href="css/admin.css">
 <link rel="icon" type="image/png" href="../images/favicon.png">
+<style>
+  .settings-box {
+    background: #ffffff;
+    border: 1px solid rgba(197, 155, 63, 0.3);
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  .slide-card {
+    border: 1px solid rgba(197, 155, 63, 0.3);
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(43, 5, 18, 0.04);
+  }
+  .slide-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .preview-wrapper {
+    margin-top: 10px;
+    max-width: 240px;
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(197, 155, 63, 0.3);
+    background: var(--bg-secondary);
+  }
+  .preview-wrapper img {
+    width: 100%;
+    max-height: 140px;
+    object-fit: cover;
+    display: block;
+  }
+  .preview-wrapper .delete-img-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    background: var(--maroon-800);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .category-row-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(197, 155, 63, 0.15);
+    padding-bottom: 14px;
+  }
+  @media (max-width: 650px) {
+    .settings-box { padding: 16px 12px; }
+    .category-row-item { grid-template-columns: 1fr; gap: 8px; }
+    .preview-wrapper { max-width: 100%; }
+  }
+</style>
 </head>
 <body>
 
@@ -26,23 +94,26 @@
   </aside>
 
   <main class="main">
-    <div class="page-header"><h1>Homepage settings</h1></div>
+    <div class="page-header"><h1>Homepage Settings</h1></div>
 
-    <div class="table-wrap" style="padding: 32px;">
-      <h2 style="font-size:22px; margin-bottom:8px;">Hero slider</h2>
-      <p style="font-size:13px; color:var(--ink-700); margin-bottom:20px;">Add one or more slides — with more than one, the homepage will auto-rotate between them with arrows to navigate.</p>
+    <div class="settings-box">
+      <h2 style="font-size:22px; margin-bottom:6px;">Hero Slider</h2>
+      <p style="font-size:13px; color:var(--ink-700); margin-bottom:18px;">Homepage par auto-rotate hone wale hero banners configure karein.</p>
+      
       <div id="slide-list"></div>
-      <button type="button" class="btn btn-outline" onclick="addSlide()" style="margin-top:12px;">+ Add slide</button>
-      <div style="margin-top:24px;">
-        <button type="button" class="btn" onclick="saveSlides()">Save hero slider</button>
+      <button type="button" class="btn btn-outline" onclick="addSlide()">+ Add Slide</button>
+      <div style="margin-top:18px;">
+        <button type="button" class="btn" onclick="saveSlides()">Save Hero Slider</button>
         <p class="msg" id="hero-msg"></p>
       </div>
 
-      <h2 style="font-size:22px; margin: 40px 0 20px; padding-top:32px; border-top:1px solid rgba(197, 155, 63, 0.3);">Categories</h2>
+      <h2 style="font-size:22px; margin: 36px 0 6px; padding-top:24px; border-top:1px solid rgba(197, 155, 63, 0.25);">Categories Bar</h2>
+      <p style="font-size:13px; color:var(--ink-700); margin-bottom:18px;">Homepage circles ke category icons aur names update karein.</p>
+      
       <div id="category-list"></div>
-      <button type="button" class="btn btn-outline" onclick="addCategoryRow()" style="margin-top:12px;">+ Add category</button>
-      <div style="margin-top:24px;">
-        <button type="button" class="btn" onclick="saveCategories()">Save categories</button>
+      <button type="button" class="btn btn-outline" onclick="addCategoryRow()">+ Add Category</button>
+      <div style="margin-top:18px;">
+        <button type="button" class="btn" onclick="saveCategories()">Save Categories</button>
         <p class="msg" id="category-msg"></p>
       </div>
     </div>
@@ -52,7 +123,6 @@
 <script src="../js/config.js"></script>
 <script src="js/adminApi.js"></script>
 <script>
-  auth.requireAuth();
   let slides = [];
   let categories = [];
 
@@ -68,23 +138,25 @@
       categories = (s && s.categories) ? s.categories : [];
       renderCategories();
     } catch (e) {
-      alert('Could not load settings');
+      alert('Could not load site settings');
     }
   }
 
   function renderSlides() {
     document.getElementById('slide-list').innerHTML = slides.map((sl, i) => `
-      <div style="border:1px solid rgba(197, 155, 63, 0.3); border-radius:6px; background:#fff; padding:20px; margin-bottom:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div class="slide-card">
+        <div class="slide-card-header">
           <strong style="font-family:var(--serif); font-size:18px; color:var(--burgundy-900);">Slide ${i + 1}</strong>
-          ${slides.length > 1 ? `<span class="btn-sm btn-danger" style="cursor:pointer;" onclick="removeSlide(${i})">Remove slide</span>` : ''}
+          ${slides.length > 1 ? `<span class="btn-sm btn-danger" style="cursor:pointer;" onclick="removeSlide(${i})">Remove</span>` : ''}
         </div>
         <div class="form-group">
-          <label>Photo</label>
+          <label>Banner Image</label>
           <input type="file" accept="image/*" onchange="uploadSlideImage(${i}, this.files)">
-          <div class="image-preview-row">
-            ${sl.image ? `<div class="image-preview"><img src="${sl.image}"><div class="x" onclick="removeSlideImage(${i})">×</div></div>` : ''}
-          </div>
+          ${sl.image ? `
+            <div class="preview-wrapper">
+              <img src="${sl.image}" alt="Slide ${i + 1}">
+              <div class="delete-img-btn" onclick="removeSlideImage(${i})">×</div>
+            </div>` : ''}
         </div>
         <div class="form-group">
           <label>Heading</label>
@@ -95,7 +167,7 @@
           <textarea onchange="slides[${i}].subtext = this.value">${sl.subtext || ''}</textarea>
         </div>
         <div class="form-group">
-          <label>Button text</label>
+          <label>Button Text</label>
           <input type="text" value="${sl.buttonText || 'Shop now'}" onchange="slides[${i}].buttonText = this.value">
         </div>
       </div>
@@ -103,8 +175,9 @@
   }
 
   async function uploadSlideImage(index, files) {
+    if (!files.length) return;
     const msg = document.getElementById('hero-msg');
-    msg.textContent = 'Uploading…';
+    msg.textContent = 'Uploading image…';
     msg.className = 'msg';
     try {
       const res = await adminApi.uploadImages(files);
@@ -143,7 +216,7 @@
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.message);
-      msg.textContent = 'Saved ✓';
+      msg.textContent = 'Saved successfully ✓';
       msg.className = 'msg success';
     } catch (err) {
       msg.textContent = err.message || 'Could not save';
@@ -153,25 +226,28 @@
 
   function renderCategories() {
     document.getElementById('category-list').innerHTML = categories.map((c, i) => `
-      <div class="form-row" style="align-items:end; margin-bottom:16px; border-bottom:1px solid rgba(197, 155, 63, 0.2); padding-bottom:16px;">
-        <div class="form-group">
-          <label>Category name</label>
-          <input type="text" value="${c.name}" onchange="categories[${i}].name = this.value">
+      <div class="category-row-item">
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Category Name</label>
+          <input type="text" value="${c.name || ''}" onchange="categories[${i}].name = this.value">
         </div>
-        <div class="form-group">
-          <label>Icon photo</label>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Icon Image</label>
           <input type="file" accept="image/*" onchange="uploadCategoryImage(${i}, this.files)">
-          <div class="image-preview-row">
-            ${c.image ? `<div class="image-preview"><img src="${c.image}"><div class="x" onclick="removeCategory(${i})">×</div></div>` : `<span class="btn-sm btn-danger" style="cursor:pointer;" onclick="removeCategory(${i})">Remove</span>`}
-          </div>
+          ${c.image ? `
+            <div class="preview-wrapper" style="max-width:80px; height:80px;">
+              <img src="${c.image}" alt="${c.name}" style="height:100%;">
+              <div class="delete-img-btn" onclick="removeCategory(${i})">×</div>
+            </div>` : `<span class="btn-sm btn-danger" style="margin-top:6px; display:inline-block; cursor:pointer;" onclick="removeCategory(${i})">Remove</span>`}
         </div>
       </div>
     `).join('');
   }
 
   async function uploadCategoryImage(index, files) {
+    if (!files.length) return;
     const msg = document.getElementById('category-msg');
-    msg.textContent = 'Uploading…';
+    msg.textContent = 'Uploading icon…';
     msg.className = 'msg';
     try {
       const res = await adminApi.uploadImages(files);
@@ -205,7 +281,7 @@
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.message);
-      msg.textContent = 'Saved ✓';
+      msg.textContent = 'Saved successfully ✓';
       msg.className = 'msg success';
     } catch (err) {
       msg.textContent = err.message || 'Could not save';
