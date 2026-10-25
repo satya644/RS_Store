@@ -85,7 +85,7 @@
 </head>
 <body>
 
-<!-- App Install Banner (Sirf Browser me dikhega, APK me nahi) -->
+<!-- App Install Banner -->
 <div id="app-install-banner">
   <div class="app-banner-inner">
     <div class="app-banner-info">
@@ -142,7 +142,7 @@
   </div>
 </div>
 
-<div class="product-grid" id="featured-grid">
+<div class="product-grid container" id="featured-grid">
   <p class="empty-state" style="grid-column: 1/-1;">Loading pieces…</p>
 </div>
 
@@ -175,11 +175,8 @@
 <script src="js/searchSuggest.js"></script>
 <script src="js/whatsapp.js"></script>
 <script>
-  // Strict APK vs Mobile Browser Check
   function checkAppEnvironment() {
     const ua = navigator.userAgent || navigator.vendor || window.opera || '';
-    
-    // Strict identification for WebIntoApp, Android WebViews, Standalone PWAs & URL app parameters
     const isApp = /(wv|\.0\.0\.0|WebView|Version\/.*Chrome|Android.*wv|MobileApp)/i.test(ua)
                   || window.matchMedia('(display-mode: standalone)').matches
                   || window.navigator.standalone === true
@@ -195,7 +192,7 @@
 
     if (isApp || isBannerDismissed) {
       banner.style.display = 'none';
-      banner.remove(); // APK me completely remove kar dega
+      banner.remove();
     } else {
       banner.style.display = 'block';
     }
@@ -210,7 +207,6 @@
     localStorage.setItem('rs_app_banner_hidden', 'true');
   }
 
-  // DOM load hone se pehle aur load hote hi check chalayein
   checkAppEnvironment();
   document.addEventListener('DOMContentLoaded', checkAppEnvironment);
 
@@ -222,10 +218,11 @@
     return html;
   }
 
+  // Saare products load karega (100 limit) taaki koi piece chhoote nahi
   async function loadFeatured() {
     const grid = document.getElementById('featured-grid');
     try {
-      const res = await api.getProducts('?limit=4');
+      const res = await api.getProducts('?limit=100');
       if (!res.data || res.data.length === 0) {
         grid.innerHTML = '<p class="empty-state" style="grid-column: 1/-1;">New pieces are on their way — check back soon.</p>';
         return;
